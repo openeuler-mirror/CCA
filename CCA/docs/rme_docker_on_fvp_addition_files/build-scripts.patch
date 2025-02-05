@@ -1,0 +1,45 @@
+diff --git a/build-buildroot.sh b/build-buildroot.sh
+index 5a2838d..0169afd 100755
+--- a/build-buildroot.sh
++++ b/build-buildroot.sh
+@@ -59,8 +59,8 @@ do_build ()
+ 	# Prepare overlay for realm (filesystem+kernel)
+ 	mkdir -p $PWD/tmp_realm_overlay/realm
+ 	cp $BUILDROOT_PATH/output/images/rootfs.ext4 ./tmp_realm_overlay/realm/realm-fs.ext4
+-	e2fsck -fp ./tmp_realm_overlay/realm/realm-fs.ext4
+-	resize2fs ./tmp_realm_overlay/realm/realm-fs.ext4 100M
++	# e2fsck -fp ./tmp_realm_overlay/realm/realm-fs.ext4
++	# resize2fs ./tmp_realm_overlay/realm/realm-fs.ext4 5000M
+ 	cp $LINUX_PATH/arch/arm64/boot/Image ./tmp_realm_overlay/realm/.
+ 
+ 	# Prepare overlay for kvm-unit-tests
+@@ -108,4 +108,4 @@ do_package ()
+ 
+ 
+ DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+-source $DIR/framework.sh $@
+\ No newline at end of file
++source $DIR/framework.sh $@
+diff --git a/build-linux.sh b/build-linux.sh
+index 40d647c..27dd315 100755
+--- a/build-linux.sh
++++ b/build-linux.sh
+@@ -59,6 +59,12 @@
+ # OUTPUT_DIR - Directory where build products are stored
+ #
+ 
++SCRIPT_PATH=$(readlink -f "$0")
++SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
++ROOT_DIR=$(dirname "$SCRIPT_DIR")
++LINUX_DIR="$ROOT_DIR"/linux
++mv "$LINUX_DIR"/.git "$LINUX_DIR"/bak-git
++
+ do_build ()
+ {
+ 	echo
+@@ -222,3 +228,5 @@ do_package ()
+ 
+ DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+ source $DIR/framework.sh $@
++
++mv "$LINUX_DIR"/bak-git "$LINUX_DIR"/.git
