@@ -1,0 +1,8 @@
+label: QEMU CCA仿真使用指南
+isManual: true
+description: CCA旨在为所有数据和使用中的代码提供机密性和完整性保护
+sections:
+    - label: ARM CCA介绍
+      href: ./introduction_to_cca.md
+    - label: CCA使用指南
+      href: ./cca_user_guide.md
