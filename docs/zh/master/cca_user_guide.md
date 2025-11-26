@@ -53,7 +53,7 @@ check_certificate = off
 ```sh
 mkdir ~/cca
 cd ~/cca
-repo init -u https://git.codelinaro.org/linaro/dcap/op-tee-4.2.0/manifest.git -b cca/v9 -m qemu_v8_cca.xml --repo-url https://mirrors.tuna.tsinghua.edu.cn/git/git-repo
+repo init -u https://git.codelinaro.org/linaro/dcap/op-tee-4.2.0/manifest.git -b cca/v8 -m qemu_v8_cca.xml --repo-url https://mirrors.tuna.tsinghua.edu.cn/git/git-repo
 repo sync -j8 --no-clone-bundle
 cd build
 make -j8 toolchains
@@ -385,7 +385,16 @@ Target packages
 
 ```sh
 make savedefconfig
+#添加依赖项后重新构建buildroot
+cd ~/cca/build
+make buildroot
+cd ~/cca/buildroot
 ```
+
+#### 常见编译错误
+
+- 错误：could not found hash linux-6.6.32.tar.xz  
+解决办法：手动计算linux-6.6.32.tar.xz的sha256值，并添加到~/cca/cca-qemu/buildroot/package/linux-headers的对应位置
 
 构建libvirt
 
