@@ -10,6 +10,7 @@
 #include "rme_acc.h"
 #include "rme_sec.h"
 #include "rme_hpre.h"
+#include "rme_zip.h"
 
 #define OVERRIDE_ONLY		1
 
@@ -20,6 +21,9 @@ static const struct pci_device_id rme_acc_ids[] = {
 	{ PCI_DEVICE_DRIVER_OVERRIDE(PCI_VENDOR_ID_HUAWEI,
 				     PCI_DEVICE_ID_HUAWEI_HPRE_PF,
 				     OVERRIDE_ONLY) },
+	{ PCI_DEVICE_DRIVER_OVERRIDE(PCI_VENDOR_ID_HUAWEI,
+				     PCI_DEVICE_ID_HUAWEI_ZIP_PF,
+				     OVERRIDE_ONLY) },
 	{ 0, }
 };
 MODULE_DEVICE_TABLE(pci, rme_acc_ids);
@@ -27,6 +31,7 @@ MODULE_DEVICE_TABLE(pci, rme_acc_ids);
 static struct dentry *rme_debugfs_root;
 static struct dentry *rme_sec_debugfs;
 static struct dentry *rme_hpre_debugfs;
+static struct dentry *rme_zip_debugfs;
 
 struct dentry *get_rme_root_debugfs(struct pci_dev *pdev)
 {
@@ -38,6 +43,8 @@ struct dentry *get_rme_root_debugfs(struct pci_dev *pdev)
 		return rme_sec_debugfs;
 	case PCI_DEVICE_ID_HUAWEI_HPRE_PF:
 		return rme_hpre_debugfs;
+	case PCI_DEVICE_ID_HUAWEI_ZIP_PF:
+		return rme_zip_debugfs;
 	default:
 		return NULL;
 	}
@@ -50,6 +57,8 @@ static int rme_acc_probe(struct pci_dev *pdev, const struct pci_device_id *id)
 		return sec_probe(pdev);
 	case PCI_DEVICE_ID_HUAWEI_HPRE_PF:
 		return hpre_probe(pdev);
+	case PCI_DEVICE_ID_HUAWEI_ZIP_PF:
+		return zip_probe(pdev);
 	default:
 		return -ENODEV;
 	}
@@ -62,6 +71,8 @@ static void rme_acc_remove(struct pci_dev *pdev)
 		return sec_remove(pdev);
 	case PCI_DEVICE_ID_HUAWEI_HPRE_PF:
 		return hpre_remove(pdev);
+	case PCI_DEVICE_ID_HUAWEI_ZIP_PF:
+		return zip_remove(pdev);
 	default:
 		return;
 	}
@@ -79,6 +90,8 @@ static struct pci_driver rme_acc_driver = {
 static void rme_devices_list_init(void)
 {
 	hisi_qm_init_list(get_rme_sec_devices());
+	hisi_qm_init_list(get_rme_hpre_devices());
+	hisi_qm_init_list(get_rme_zip_devices());
 }
 
 static void rme_register_debugfs(void)
@@ -88,6 +101,8 @@ static void rme_register_debugfs(void)
 
 	rme_debugfs_root = debugfs_create_dir("rme_acc", NULL);
 	rme_sec_debugfs = debugfs_create_dir("rme_sec", rme_debugfs_root);
+	rme_hpre_debugfs = debugfs_create_dir("rme_hpre", rme_debugfs_root);
+	rme_zip_debugfs = debugfs_create_dir("rme_zip", rme_debugfs_root);
 }
 
 static void rme_unregister_debugfs(void)
@@ -102,7 +117,7 @@ static int __init rme_acc_init(void)
 #ifdef CONFIG_HISI_CCADA_HOST
 	hisi_pcipc_ns_add(rme_acc_ids);
 #else
-	pr_err("RME ACC Driver requires HISI CCADA to be enabled\n");
+	pr_err("RME ACC Driver requires HISI CCA DA to be enabled, check the kernel config.\n");
 	return -EOPNOTSUPP;
 #endif
 
