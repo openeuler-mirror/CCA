@@ -9,6 +9,7 @@
 
 #include "rme_acc.h"
 #include "rme_sec.h"
+#include "rme_hpre.h"
 
 #define OVERRIDE_ONLY		1
 
@@ -16,12 +17,16 @@ static const struct pci_device_id rme_acc_ids[] = {
 	{ PCI_DEVICE_DRIVER_OVERRIDE(PCI_VENDOR_ID_HUAWEI,
 				     PCI_DEVICE_ID_HUAWEI_SEC_PF,
 				     OVERRIDE_ONLY) },
+	{ PCI_DEVICE_DRIVER_OVERRIDE(PCI_VENDOR_ID_HUAWEI,
+				     PCI_DEVICE_ID_HUAWEI_HPRE_PF,
+				     OVERRIDE_ONLY) },
 	{ 0, }
 };
 MODULE_DEVICE_TABLE(pci, rme_acc_ids);
 
 static struct dentry *rme_debugfs_root;
 static struct dentry *rme_sec_debugfs;
+static struct dentry *rme_hpre_debugfs;
 
 struct dentry *get_rme_root_debugfs(struct pci_dev *pdev)
 {
@@ -31,6 +36,8 @@ struct dentry *get_rme_root_debugfs(struct pci_dev *pdev)
 	switch (pdev->device) {
 	case PCI_DEVICE_ID_HUAWEI_SEC_PF:
 		return rme_sec_debugfs;
+	case PCI_DEVICE_ID_HUAWEI_HPRE_PF:
+		return rme_hpre_debugfs;
 	default:
 		return NULL;
 	}
@@ -41,6 +48,8 @@ static int rme_acc_probe(struct pci_dev *pdev, const struct pci_device_id *id)
 	switch (pdev->device) {
 	case PCI_DEVICE_ID_HUAWEI_SEC_PF:
 		return sec_probe(pdev);
+	case PCI_DEVICE_ID_HUAWEI_HPRE_PF:
+		return hpre_probe(pdev);
 	default:
 		return -ENODEV;
 	}
@@ -51,6 +60,8 @@ static void rme_acc_remove(struct pci_dev *pdev)
 	switch (pdev->device) {
 	case PCI_DEVICE_ID_HUAWEI_SEC_PF:
 		return sec_remove(pdev);
+	case PCI_DEVICE_ID_HUAWEI_HPRE_PF:
+		return hpre_remove(pdev);
 	default:
 		return;
 	}

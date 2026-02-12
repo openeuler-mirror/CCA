@@ -5,7 +5,7 @@ ccflags-y +=	-I$(PWD) \
 		-I$(srctree)/drivers/crypto/hisilicon/
 
 obj-m += rme_acc.o
-rme_acc-objs:= rme_acc_drv.o rme_sec.o
+rme_acc-objs:= rme_acc_drv.o rme_sec.o rme_hpre.o
 
 all:
 	$(MAKE) modules -C $(KERNEL_DIR) M=$(MODULE_DIR)
