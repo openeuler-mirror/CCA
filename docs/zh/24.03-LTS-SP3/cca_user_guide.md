@@ -1,4 +1,4 @@
-# CCA 使用指南
+# QEMU环境下CCA使用指南
 
 该文档用于描述在openEuler系统下搭建QEMU虚拟CCA环境，并运行CCA虚拟机以及输出证明报告。
 
