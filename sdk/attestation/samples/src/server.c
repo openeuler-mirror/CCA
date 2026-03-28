@@ -9,7 +9,6 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <getopt.h>
-#include "attestation.h"
 #include "common.h"
 #include "utils.h"
 #include <sys/stat.h>
@@ -87,7 +86,7 @@ int handle_connect(int connfd)
             unsigned char dev_cert[MAX] = {};
             size_t dev_cert_len = MAX;
             ret = cca_get_dev_cert(dev_cert, &dev_cert_len);
-            if (ret != TSI_SUCCESS) {
+            if (ret != 0) {
                 printf("Failed to get TSI version.\n");
                 return ret;
             }
@@ -99,7 +98,7 @@ int handle_connect(int connfd)
             unsigned char token[MAX] = {};
             size_t token_len = MAX;
             ret = cca_get_attestation_token(challenge, CHALLENGE_SIZE, token, &token_len);
-            if (ret != TSI_SUCCESS) {
+            if (ret != 0) {
                 printf("Failed to get attestation token.\n");
                 return ret;
             }
@@ -109,7 +108,7 @@ int handle_connect(int connfd)
             unsigned char *ccel_table = NULL;
             size_t ccel_table_len = MAX;
             ret = read_file_data(CCEL_ACPI_TABLE_PATH, &ccel_table, &ccel_table_len);
-            if (ret != TSI_SUCCESS) {
+            if (ret != 0) {
                 printf("Failed to read ccel acpi table.\n");
                 return ret;
             }
@@ -119,7 +118,7 @@ int handle_connect(int connfd)
             unsigned char *ccel_data = NULL;
             size_t ccel_data_len = 0;
             ret = read_file_data(CCEL_EVENT_LOG_PATH, &ccel_data, &ccel_data_len);
-            if (ret != TSI_SUCCESS) {
+            if (ret != 0) {
                 printf("Failed to read ccel log data.\n");
                 return ret;
             }
