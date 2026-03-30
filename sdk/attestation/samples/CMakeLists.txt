@@ -22,7 +22,6 @@ add_executable(server
     src/server.c
     src/utils.c
 )
-target_link_libraries(server vccaattestation)
 
 add_executable(client 
     src/client.c 
