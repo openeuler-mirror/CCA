@@ -545,7 +545,8 @@ static void measure_rim_blobs(cvm_init_measure_t *meas, const blob_list *rim_blo
 
 void generate_rim_reference(uint64_t tec_num, uint64_t ram_size,
     bool ccal_enable, uint64_t sve_vector_size,
-    uint64_t pmu_counter_num, const blob_list *rim_blobs, bool use_firmware)
+    uint64_t pmu_counter_num, const blob_list *rim_blobs, bool use_firmware,
+    enum hash_algo hash_algo)
 {
     bool lpa2_enable = false;
     bool sve_enable =  true;
@@ -555,7 +556,6 @@ void generate_rim_reference(uint64_t tec_num, uint64_t ram_size,
     uint64_t num_bps = 5;
     uint64_t num_wps = 3;
     uint64_t num_pmu = 0;
-    uint64_t hash_algo = 0;
     uint64_t pc = 0;
 
     cvm_init_measure_t meas = {0};
@@ -707,8 +707,8 @@ static void print_help(const char *name)
     printf("\nUsage:\n");
     printf(" %s [options]...\n\n", name);
     printf("Generate rim reference value, support two three types:\n");
-    printf("(a) direct kernel boot without firmware: -k -d [-i] [--ccal] -v -r\n");
-    printf("(b) firmware-only boot                 : -f -d [--ccal] -v -r\n");
+    printf("(a) direct kernel boot without firmware: -k -d [-i] [--ccal] -v -r [-a]\n");
+    printf("(b) firmware-only boot                 : -f -d [--ccal] -v -r [-a]\n");
     printf("Options:\n");
     printf("\t-k/--kernel    kernel_path            :     path to kernel image\n");
     printf("\t-d/--dtb       dtb_path               :     path to device tree dtb file\n");
@@ -716,6 +716,7 @@ static void print_help(const char *name)
     printf("\t-f/--firmware  firmware_path          :     path to firmware file\n");
     printf("\t-v/--vcpu      vcpu_num               :     Number of Vcpus (must be a positive integer)\n");
     printf("\t-r/--ram       ram_size               :     size of vm ram (must be a positive integer)\n");
+    printf("\t-a/--algo      hash_algo              :     hash algorithm: sha256 or sha512 (default: sha256)\n");
     printf("\t--ccal                                :     whether to enable hisi-cca\n");
 }
 
@@ -723,7 +724,7 @@ static int parse_args(int argc, char *argv[], tools_args *args)
 {
     int opt = 0;
     char *endptr = NULL;
-    char *const short_opts = "k:i:d:f:v:h:";
+    char *const short_opts = "k:i:d:f:v:r:a:h:";
     struct option const long_opts[] = {
         {"kernel", required_argument, NULL, 'k'},
         {"initrd", required_argument, NULL, 'i'},
@@ -731,6 +732,7 @@ static int parse_args(int argc, char *argv[], tools_args *args)
         {"firmware", required_argument, NULL, 'f'},
         {"vcpu", required_argument, NULL, 'v'},
         {"ram", required_argument, NULL, 'r'},
+        {"algo", required_argument, NULL, 'a'},
         {"ccal", no_argument, NULL, 0},
         {"help", required_argument, NULL, 'h'},
         {0, 0, 0, 0}};
@@ -742,6 +744,7 @@ static int parse_args(int argc, char *argv[], tools_args *args)
     }
 
     memset(args, 0, sizeof(tools_args));
+    args->hash_algo = HASH_ALGO_SHA256;
 
     while ((opt = getopt_long(argc, argv, short_opts, long_opts, &index)) != -1) {
         switch (opt) {
@@ -768,6 +771,16 @@ static int parse_args(int argc, char *argv[], tools_args *args)
                 args->ram_size = strtoull(optarg, &endptr, 0);
                 if (endptr == optarg) {
                     gen_err("invalid ram_size %s\n", optarg);
+                    return -1;
+                }
+                break;
+            case 'a':
+                if (strcmp(optarg, "sha256") == 0) {
+                    args->hash_algo = HASH_ALGO_SHA256;
+                } else if (strcmp(optarg, "sha512") == 0) {
+                    args->hash_algo = HASH_ALGO_SHA512;
+                } else {
+                    gen_err("invalid hash algorithm %s, supported: sha256, sha512", optarg);
                     return -1;
                 }
                 break;
@@ -805,7 +818,8 @@ int main(int argc, char *argv[])
 #endif
 
     generate_rim_reference(args.vcpu_num, args.ram_size, args.ccal_enable, args.sve_vector_length,
-                           args.pmu_counter_num, &rim_blobs, strlen(args.firmware_path) != 0);
+                           args.pmu_counter_num, &rim_blobs, strlen(args.firmware_path) != 0,
+                           args.hash_algo);
     free_rim_blobs(&rim_blobs);
     return 0;
 }
