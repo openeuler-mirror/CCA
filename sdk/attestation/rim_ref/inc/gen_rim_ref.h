@@ -220,6 +220,7 @@ typedef struct {
     int sve_vector_length;
     int pmu_counter_num;
     bool ccal_enable;
+    enum hash_algo hash_algo;
 } tools_args;
 
 void measure_create_cvm(cvm_init_measure_t *meas,
@@ -251,7 +252,8 @@ void generate_rim_reference(uint64_t tec_num,
                             uint64_t sve_vector_size,
                             uint64_t pmu_counter_num,
                             const blob_list *rim_blobs,
-                            bool use_firmware);
+                            bool use_firmware,
+                            enum hash_algo hash_algo);
 void print_hash(unsigned char *measurement,
                 const enum hash_algo algorithm);
 
