@@ -68,7 +68,12 @@ measure_guest_image() {
     info "Starting measurement process for: ${target_image}"
     info "Using hash algorithm: ${HASH_ALG}"
     guestunmount ${TMP_MOUNT_PATH} 2>/dev/null || true
-    gcc measure_pe.c -o MeasurePe -lcrypto -DHASH_ALG=${HASH_ALG}
+    if [[ "${HASH_ALG}" == "sha256" ]]; then
+        gcc measure_pe.c -o MeasurePe -lcrypto -DUSE_SHA256
+    elif [[ "${HASH_ALG}" == "sha512" ]]; then
+        gcc measure_pe.c -o MeasurePe -lcrypto -DUSE_SHA512
+    fi
+
     mkdir -p ${TMP_MOUNT_PATH}
 
     guestmount -a ${target_image} -i ${TMP_MOUNT_PATH} || error "Failed to mount the VM image."
@@ -77,6 +82,7 @@ measure_guest_image() {
     BOOT_EFI_PATH="${TMP_MOUNT_PATH}/boot/EFI/BOOT/BOOTAA64.EFI"
     [[ -f "${BOOT_EFI_PATH}" ]] || error "BOOTAA64.EFI not found"
     sha_grub=$(./MeasurePe "${BOOT_EFI_PATH}" | grep -oE 'SHA-[0-9]+ = [0-9a-f]+' | awk -F" = " '{print $2}')
+    tmp_str=$(./MeasurePe "${BOOT_EFI_PATH}")
 
     # measure grub.cfg
     GRUB_CFG_PATH="${TMP_MOUNT_PATH}/boot/efi/EFI/openEuler/grub.cfg"

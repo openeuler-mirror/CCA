@@ -8,6 +8,8 @@
 
 /* SHA256 digest length (32 bytes) */
 #define SHA256_DIGEST_LENGTH 32
+#define SHA512_DIGEST_LENGTH 64
+#define MAX_DIGEST_LENGTH   SHA512_DIGEST_LENGTH
 
 /* Add hash algorithm definitions */
 #define TPM_ALG_ERROR 0x0
@@ -87,5 +89,7 @@ void event_log_dump(event_log_t* log);
 
 /* Internal function declarations */
 bool process_event_log_entry(event_log_t* log, size_t* pos, event_log_entry_t* entry);
+
+int get_digest_size(uint16_t algoid);
 
 #endif /* EVENT_LOG_H */

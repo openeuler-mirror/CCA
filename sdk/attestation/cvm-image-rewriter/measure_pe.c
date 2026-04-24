@@ -29,16 +29,16 @@ typedef size_t uintn_t;
 #define SIGNATURE_16(A, B) (((A) | ((B) << 8)))
 #define SIGNATURE_32(A, B, C, D) (SIGNATURE_16(A, B) | (SIGNATURE_16(C, D) << 16))
 
-#ifndef HASH_ALG
-#define HASH_ALG sha256
+#if !defined(USE_SHA256) && !defined(USE_SHA512)
+#define USE_SHA256
 #endif
 
-#if HASH_ALG == sha256
+#ifdef USE_SHA256
 #define HASH_NAME "SHA-256"
 #define HASH_DIGEST_SIZE 32
 #define HASH_FUNCTION EVP_sha256()
 #define HASH_DIGEST_LENGTH SHA256_DIGEST_LENGTH
-#elif HASH_ALG == sha512
+#elif defined(USE_SHA512)
 #define HASH_NAME "SHA-512"
 #define HASH_DIGEST_SIZE 64
 #define HASH_FUNCTION EVP_sha512()

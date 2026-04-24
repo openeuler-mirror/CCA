@@ -16,7 +16,6 @@ static const char* get_event_type_string(uint32_t type);
 static void print_hex_dump(const uint8_t* data, size_t length, size_t base_addr);
 static void update_rem(rem_t* rem, const uint8_t* digest);
 static const char* get_algorithm_string(uint16_t algoid);
-static int get_digest_size(uint16_t algoid);
 
 /* Event log entry structure */
 typedef struct {
@@ -98,7 +97,8 @@ bool process_event_log_entry(event_log_t* log, size_t* pos,
 
     /* Process other type events */
     if (entry->digest_count > 0) {
-        entry->digests = (uint8_t*)malloc(entry->digest_count * SHA256_DIGEST_LENGTH);
+        /* Assert the entry->digests_count == 1 */
+        entry->digests = (uint8_t*)malloc(entry->digest_count * MAX_DIGEST_LENGTH);
         entry->alg_ids = (uint16_t*)malloc(entry->digest_count * sizeof(uint16_t));
         if (!entry->digests || !entry->alg_ids) {
             free(entry->digests);
@@ -112,8 +112,8 @@ bool process_event_log_entry(event_log_t* log, size_t* pos,
             entry->alg_ids[i] = binary_blob_get_uint16(&log->blob, pos);
             
             /* Read digest data */
-            binary_blob_get_bytes(&log->blob, pos, SHA256_DIGEST_LENGTH,
-                                 entry->digests + i * SHA256_DIGEST_LENGTH);
+            binary_blob_get_bytes(&log->blob, pos, get_digest_size(entry->alg_ids[i]),
+                                 entry->digests + i * MAX_DIGEST_LENGTH);
         }
     }
 
@@ -197,6 +197,49 @@ static void update_rem(rem_t* rem, const uint8_t* digest)
 
     /* Copy hash value to REM */
     memcpy(rem->data, hash, REM_LENGTH_BYTES);
+
+    EVP_MD_CTX_free(ctx);
+}
+
+static void sha512_update_rem(rem_t* rem, const uint8_t* digest)
+{
+    uint8_t hash[SHA512_DIGEST_LENGTH];
+    EVP_MD_CTX* ctx = EVP_MD_CTX_new();
+    if (!ctx) {
+        printf("Error: Failed to create EVP context\n");
+        return;
+    }
+
+    if (EVP_DigestInit_ex(ctx, EVP_sha512(), NULL) != 1) {
+        printf("Error: Failed to initialize SHA512\n");
+        EVP_MD_CTX_free(ctx);
+        return;
+    }
+
+    /* Update REM data */
+    if (EVP_DigestUpdate(ctx, rem->data, REM_64_LENGTH_BYTES) != 1) {
+        printf("Error: Failed to update REM data\n");
+        EVP_MD_CTX_free(ctx);
+        return;
+    }
+
+    /* Update digest data */
+    if (EVP_DigestUpdate(ctx, digest, SHA512_DIGEST_LENGTH) != 1) {
+        printf("Error: Failed to update digest data\n");
+        EVP_MD_CTX_free(ctx);
+        return;
+    }
+
+    /* Get final hash value */
+    unsigned int hash_len;
+    if (EVP_DigestFinal_ex(ctx, hash, &hash_len) != 1) {
+        printf("Error: Failed to finalize hash\n");
+        EVP_MD_CTX_free(ctx);
+        return;
+    }
+
+    /* Copy hash value to REM */
+    memcpy(rem->data, hash, REM_64_LENGTH_BYTES);
 
     EVP_MD_CTX_free(ctx);
 }
@@ -315,7 +358,7 @@ static const char* get_algorithm_string(uint16_t algoid)
 }
 
 /* Add function to get digest length */
-static int get_digest_size(uint16_t algoid)
+int get_digest_size(uint16_t algoid)
 {
     switch (algoid) {
         case TPM_ALG_SHA1: return 20;
@@ -441,7 +484,12 @@ bool event_log_replay(event_log_t* log)
 
         if (entry.event_type == 0x3) { /* EV_NO_ACTION */
             if (entry.rem_index < REM_COUNT && entry.digest_count > 0) {
-                update_rem(&log->rems[entry.rem_index], entry.digests);
+                if (entry.alg_ids[0] == TPM_ALG_SHA256)
+                    update_rem(&log->rems[entry.rem_index], entry.digests);
+                else if (entry.alg_ids[0] == TPM_ALG_SHA512)
+                    sha512_update_rem(&log->rems[entry.rem_index], entry.digests);
+                else
+                    printf("Error, unsupport alg:%u.\n", entry.alg_ids[0]);
             }
         }
 
@@ -473,7 +521,12 @@ bool event_log_replay(event_log_t* log)
 
         if (entry.event_type != 0x3) { /* Non EV_NO_ACTION */
             if (entry.rem_index < REM_COUNT && entry.digest_count > 0) {
-                update_rem(&log->rems[entry.rem_index], entry.digests);
+                if (entry.alg_ids[0] == TPM_ALG_SHA256)
+                    update_rem(&log->rems[entry.rem_index], entry.digests);
+                else if (entry.alg_ids[0] == TPM_ALG_SHA512)
+                    sha512_update_rem(&log->rems[entry.rem_index], entry.digests);
+                else
+                    printf("Error, unsupport alg:%u.\n", entry.alg_ids[0]);
             }
         }
 
@@ -491,7 +544,7 @@ bool event_log_replay(event_log_t* log)
     /* Print final REM values */
     for (int i = 0; i < REM_COUNT; i++) {
         printf("\n==== REM[%d] ====\n", i);
-        print_hex_dump(log->rems[i].data, REM_LENGTH_BYTES, 0);
+        print_hex_dump(log->rems[i].data, REM_MAX_LENGTH_BYTES, 0);
     }
 
     /* Extract firmware state information */

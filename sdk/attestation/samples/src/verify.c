@@ -9,7 +9,7 @@
 
 /* Length of REM value read from rem.txt file (each value is 32 bytes, represented as 64 hex characters) */
 #define REM_HEX_LENGTH 64
-#define HASH_STR_LENGTH 64
+#define HASH_STR_LENGTH 128
 
 
 /* Forward declarations of all functions */
@@ -127,7 +127,7 @@ bool verify_firmware_state(const char* json_file, const firmware_log_state_t* st
     }
 
     /* Verify hash algorithm */
-    if (strcmp(ref.hash_alg, "sha-256") != 0) {
+    if (strcmp(ref.hash_alg, "sha256") != 0 && strcmp(ref.hash_alg, "sha512") != 0) {
         printf("Error: Unsupported hash algorithm: %s\n", ref.hash_alg);
         goto cleanup;
     }
@@ -375,7 +375,7 @@ bool compare_and_print_hash(const char* component_name, const char* ref_hash,
     char actual_hex[HASH_STR_LENGTH + 1] = {0};
     bytes_to_hex_string(actual_hash, hash_size, actual_hex);
     
-    bool match = (strncmp(ref_hash, actual_hex, HASH_STR_LENGTH) == 0);
+    bool match = (strncmp(ref_hash, actual_hex, hash_size * 2) == 0);
     printf("\n%s verification %s\n", component_name, match ? "passed" : "failed");
     printf("Expected: %s\n", ref_hash);
     printf("Got:      %s\n", actual_hex);

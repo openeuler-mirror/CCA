@@ -6,9 +6,11 @@
 
 #define REM_COUNT 4
 #define REM_LENGTH_BYTES 32
+#define REM_64_LENGTH_BYTES 64
+#define REM_MAX_LENGTH_BYTES    REM_64_LENGTH_BYTES
 
 typedef struct {
-    uint8_t data[REM_LENGTH_BYTES];
+    uint8_t data[REM_MAX_LENGTH_BYTES];
 } rem_t;
 
 /* REM operation function */
