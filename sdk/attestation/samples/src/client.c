@@ -182,10 +182,6 @@ int verify_token(unsigned char *token, size_t token_len)
         printf("\nVerifying REM values from token...\n");
         bool all_rems_passed = true;
         for (int i = 0; i < REM_COUNT; i++) {
-            if (cca_token.cvm_token.rem[i].len != sizeof(rem_t)) {
-                printf("Error: Invalid REM[%d] size in token\n", i);
-                return VERIFY_FAILED;
-            }
             verify_single_rem(i, (rem_t*)cca_token.cvm_token.rem[i].ptr, &event_log.rems[i]);
             if (!rem_compare((rem_t*)cca_token.cvm_token.rem[i].ptr, &event_log.rems[i])) {
                 all_rems_passed = false;

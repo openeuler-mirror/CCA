@@ -5,7 +5,7 @@
 bool rem_init(rem_t* rem)
 {
     if (!rem) return false;
-    memset(rem->data, 0, REM_LENGTH_BYTES);
+    memset(rem->data, 0, REM_MAX_LENGTH_BYTES);
     return true;
 }
 

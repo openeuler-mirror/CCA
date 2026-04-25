@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Huawei Technologies Co., Ltd. 2026. All rights reserved.
  * You can use this software according to the terms and conditions of the Mulan PSL v2.
  * You may obtain a copy of Mulan PSL v2 at:
@@ -29,7 +29,24 @@ typedef size_t uintn_t;
 #define SIGNATURE_16(A, B) (((A) | ((B) << 8)))
 #define SIGNATURE_32(A, B, C, D) (SIGNATURE_16(A, B) | (SIGNATURE_16(C, D) << 16))
 
-#define SHA256_DIGEST_SIZE 32
+#if !defined(USE_SHA256) && !defined(USE_SHA512)
+#define USE_SHA256
+#endif
+
+#ifdef USE_SHA256
+#define HASH_NAME "SHA-256"
+#define HASH_DIGEST_SIZE 32
+#define HASH_FUNCTION EVP_sha256()
+#define HASH_DIGEST_LENGTH SHA256_DIGEST_LENGTH
+#elif defined(USE_SHA512)
+#define HASH_NAME "SHA-512"
+#define HASH_DIGEST_SIZE 64
+#define HASH_FUNCTION EVP_sha512()
+#define HASH_DIGEST_LENGTH SHA512_DIGEST_LENGTH
+#else
+#error "Unsupported hash algorithm"
+#endif
+
 #define MIN_ARGC 2
 
 /* EXE file formats */
@@ -203,7 +220,7 @@ typedef union {
 } efi_image_optional_header_ptr_union;
 
 typedef struct {
-    unsigned char sha256[32];
+    unsigned char hash[HASH_DIGEST_SIZE];
 } tpml_digest_values_t;
 
 typedef struct {
@@ -230,7 +247,7 @@ static uint64_t hash_start(hash_handle_t *hash_handle_out)
         return EFI_OUT_OF_RESOURCES;
     }
 
-    if (!EVP_DigestInit_ex(context->md_ctx, EVP_sha256(), NULL)) {
+    if (!EVP_DigestInit_ex(context->md_ctx, HASH_FUNCTION, NULL)) {
         EVP_MD_CTX_free(context->md_ctx);
         free(context);
         return EFI_UNSUPPORTED;
@@ -271,13 +288,13 @@ static uint64_t hash_complete_and_extend(hash_handle_t hash_handle, const uint8_
         return EFI_UNSUPPORTED;
     }
 
-    if (digest_len != SHA256_DIGEST_LENGTH) {
+    if (digest_len != HASH_DIGEST_LENGTH) {
         EVP_MD_CTX_free(hash_handle->md_ctx);
         free(hash_handle);
         return EFI_UNSUPPORTED;
     }
 
-    memcpy(digest_list->sha256, final_digest, SHA256_DIGEST_LENGTH);
+    memcpy(digest_list->hash, final_digest, HASH_DIGEST_LENGTH);
 
     EVP_MD_CTX_free(hash_handle->md_ctx);
     free(hash_handle);
@@ -548,9 +565,9 @@ int main(int argc, char *argv[])
     tpml_digest_values_t digest_list;
     uint64_t status = measure_pe_image_and_extend((uint64_t)(uintptr_t)buffer, (size_t)filesize, &digest_list);
     if (status == EFI_SUCCESS) {
-        printf("Measure PE image succeed, SHA-256 = ");
-        for (int i = 0; i < SHA256_DIGEST_SIZE; i++) {
-            printf("%02x", digest_list.sha256[i]);
+        printf("Measure PE image succeed, %s = ", HASH_NAME);
+        for (int i = 0; i < HASH_DIGEST_SIZE; i++) {
+            printf("%02x", digest_list.hash[i]);
         }
         printf("\n");
     } else {

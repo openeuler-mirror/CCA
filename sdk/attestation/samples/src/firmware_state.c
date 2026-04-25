@@ -12,7 +12,7 @@ static bool extract_efi_image(event_log_entry_t* entry, efi_image_t* image)
     }
 
     /* Only extract image hash */
-    image->image_hash_size = SHA256_DIGEST_LENGTH;
+    image->image_hash_size = get_digest_size(entry->alg_ids[0]);
     image->image_hash = (uint8_t*)malloc(image->image_hash_size);
     if (!image->image_hash) {
         return false;
@@ -44,7 +44,7 @@ static bool extract_grub_info(event_log_entry_t* entry, grub_state_t* grub)
 
     /* Extract configuration hash */
     if (entry->digest_count > 0 && entry->digests) {
-        grub->config_hash_size = SHA256_DIGEST_LENGTH;
+        grub->config_hash_size = get_digest_size(entry->alg_ids[0]);
         grub->config_hash = (uint8_t*)malloc(grub->config_hash_size);
         if (!grub->config_hash) {
             return false;
@@ -235,13 +235,16 @@ bool firmware_log_state_extract(event_log_t* log, firmware_log_state_t* state)
                 if (find_substring(entry.event, entry.event_size, kernel_path, strlen(kernel_path)) &&
                     !find_substring(entry.event, entry.event_size, "grub_cmd:", strlen("grub_cmd:"))) {
                     if (entry.digest_count > 0 && entry.digests) {
-                        state->linux_kernel->kernel_hash_size = SHA256_DIGEST_LENGTH;
+                        state->linux_kernel->kernel_hash_size = get_digest_size(entry.alg_ids[0]);
                         state->linux_kernel->kernel_hash = (uint8_t*)malloc(state->linux_kernel->kernel_hash_size);
                         if (state->linux_kernel->kernel_hash) {
                             memcpy(state->linux_kernel->kernel_hash, entry.digests,
                                    state->linux_kernel->kernel_hash_size);
                             has_kernel_info = true;
                         }
+
+                        /* All firmware uses the same hashing algorithm. */
+                        state->hash_algo = entry.alg_ids[0];
                     }
                 }
             /* Check if it's an initrd file path */
@@ -250,7 +253,7 @@ bool firmware_log_state_extract(event_log_t* log, firmware_log_state_t* state)
                 if (find_substring(entry.event, entry.event_size, initrd_path, strlen(initrd_path)) &&
                     !find_substring(entry.event, entry.event_size, "grub_cmd:", strlen("grub_cmd:"))) {
                     if (entry.digest_count > 0 && entry.digests) {
-                        state->linux_kernel->initrd_hash_size = SHA256_DIGEST_LENGTH;
+                        state->linux_kernel->initrd_hash_size = get_digest_size(entry.alg_ids[0]);
                         state->linux_kernel->initrd_hash = (uint8_t*)malloc(state->linux_kernel->initrd_hash_size);
                         if (state->linux_kernel->initrd_hash) {
                             memcpy(state->linux_kernel->initrd_hash, entry.digests,
@@ -279,7 +282,6 @@ bool firmware_log_state_extract(event_log_t* log, firmware_log_state_t* state)
 
     /* Update state information */
     state->efi->image_count = current_efi_index;
-    state->hash_algo = TPM_ALG_SHA256; /* Currently fixed to use SHA256 */
 
     return true;
 }
