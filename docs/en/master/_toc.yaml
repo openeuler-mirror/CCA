@@ -1,0 +1,8 @@
+label: QEMU CCA Simulation Usage Guide
+isManual:  true
+description:  CCA aims to provide confidentiality and integrity protection for all data and code in use.
+sections: 
+    - label:  Introduction to Arm CCA
+      href:  ./introduction_to_cca.md
+    - label:  CCA Usage Guide
+      href:  ./cca_user_guide.md
