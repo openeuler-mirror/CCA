@@ -96,7 +96,7 @@ Four terminal windows are displayed: FirmWare, Host (corresponding to the host O
 
 ### Configuring the Source Code
 
-The following uses openEuler 25.09 as an example. Click [here](https://dl-cdn.openeuler.openatom.cn/) to download the RPM package.
+The following uses openEuler 25.09 as an example. Click [openEuler Repo](https://dl-cdn.openeuler.openatom.cn/) to download the RPM package.
 
 #### Creating a Kernel Source Code Directory
 
