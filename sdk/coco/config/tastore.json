@@ -1,0 +1,13 @@
+[
+  {
+    "instance-id": "01699f26d3c5596b010dd57e27ef0c2a5596c26d257f02d8eb0591f447a5a8f8f0",
+    "implementation-id": "00010001010000000000000000000000000000000000000000000000fc9b5e58",
+    "pkey": {
+      "crv": "P-521",
+      "kty": "EC",
+      "x": "AJ1UIMfsoiifDZ5cRz5XIepeHI9YuqvID6usWC0IywRQF9zgYE89wwf7oJT3ysRpypZJwr1AucZprqLMmn93cIXI",
+      "y": "AX9TQ2LxYDhTvR6E0h8m2UFqISsOTm7Rx77Xvf3sBL7VP4JKUfQwvGLEfqrv6OlqjkxaTA0pMRME4bv-xAsUqpC2"
+    }
+  }
+]
+

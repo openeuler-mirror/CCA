@@ -1,0 +1,69 @@
+{
+  "platform": [
+    {
+      "implementation-id": "00010001010000000000000000000000000000000000000000000000fc9b5e58",
+      "sw-components": [
+        {
+          "measurement-value": "200fd33aa612731733070dcf8ed30e9cf9961713564923239726c7a2f1d333e5",
+          "signer-id": "",
+          "component-type": "ipu"
+        },
+        {
+          "measurement-value": "7235676076b66298ca52257fb5e8b498c333af42858d40a36ef1fa214d7d4519",
+          "signer-id": "",
+          "component-type": "hilink"
+        },
+        {
+          "measurement-value": "0eededc49bb2ce4f2c8d49e0a2bc1353c2c84b7ef0d6fec933c2074692e79a45",
+          "signer-id": "",
+          "component-type": "serdes"
+        },
+        {
+          "measurement-value": "dea082df94f1590eb141a287372b22e8482c65a40c4d93fb035753a60ee5bac6",
+          "signer-id": "",
+          "component-type": "imu"
+        },
+        {
+          "measurement-value": "92ad3d653fe792dc8316d8d74451c4aad42d73bec824e34879dbcb5aa17f17ad",
+          "signer-id": "",
+          "component-type": "imf_ap"
+        },
+        {
+          "measurement-value": "64f782773d0eeefc22a9e8dcf540aff2f355222a0671b19239062f1a2affbbfe",
+          "signer-id": "",
+          "component-type": "atf"
+        },
+        {
+          "measurement-value": "24b9ae75ca3a74ef7a0a8f0bcfe6d1b3a84af615e209d081033fe121528108cc",
+          "signer-id": "",
+          "component-type": "sef"
+        },
+        {
+          "measurement-value": "f5a5fd42d16a20302798ef6ed309979b43003d2320d9f0e8ea9831a92759fb4b",
+          "signer-id": "",
+          "component-type": "rmm"
+        },
+        {
+          "measurement-value": "847ca11d6fa667042943e0c5b0677306c7ae565d9c46ccaebef9a515a6e52e3e",
+          "signer-id": "",
+          "component-type": "stmm"
+        }
+      ],
+      "platform-configuration": ""
+    }
+  ],
+  "realm": [
+    {
+      "initial-measurement": "932e442d42b345a78abec753358f39abb8e9922f677e07372dc9484424a44826261d1bceca8ae1b388220b359319070bf2d3bc2dc906a1fb527a5e9f6e4308f0",
+      "rak-hash-algorithm": "sha-512",
+      "extensible-measurements": [
+        "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+      ],
+      "personalization-value": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+    }
+  ]
+}
+
