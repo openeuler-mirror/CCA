@@ -1,0 +1,204 @@
+From 48f1c4871a69297fb0eb200fb263d0d033bef799 Mon Sep 17 00:00:00 2001
+From: lh-11 <1812205260@qq.com>
+Date: Wed, 3 Jun 2026 19:16:33 +0800
+Subject: [PATCH] CCA Token Parsing Adaptation for Kunpeng Platform
+
+---
+ src/token/evidence.rs |  5 ++--
+ src/token/platform.rs |  4 ++-
+ src/token/realm.rs    | 60 ++++++++++++++++++++++++++++++++++++++-----
+ 3 files changed, 60 insertions(+), 9 deletions(-)
+
+diff --git a/src/token/evidence.rs b/src/token/evidence.rs
+index 5c82010..e0dc68e 100644
+--- a/src/token/evidence.rs
++++ b/src/token/evidence.rs
+@@ -7,6 +7,7 @@ use super::errors::Error;
+ use super::platform::Platform;
+ use super::realm::Realm;
+ use super::realm::REALM_PROFILE;
++use super::realm::REALM_PROFILE_HUAWEI;
+ use crate::store::PlatformRefValue;
+ use crate::store::RealmRefValue;
+ use crate::store::{Cpak, IRefValueStore, ITrustAnchorStore};
+@@ -361,7 +362,7 @@ impl Evidence {
+ 
+         let mut cose_key: CoseKey;
+ 
+-        if self.realm_claims.profile == REALM_PROFILE {
++        if self.realm_claims.profile == REALM_PROFILE || self.realm_claims.profile == REALM_PROFILE_HUAWEI {
+             // it is already a COSE_Key, it just need decoding
+             cose_key = CoseKey::new();
+             cose_key.bytes = realm_pub_key;
+@@ -534,7 +535,7 @@ impl Evidence {
+         // and we expect the caller to (indirectly) invoke this methon on
+         // Evidence that has been successfully decoded (and therefore
+         // successfully validated).
+-        let realm_pub_key = self.realm_claims.get_realm_key().unwrap();
++        let realm_pub_key = self.realm_claims.get_raw_realm_key().unwrap();
+         let realm_pub_key_hash_alg = self.realm_claims.get_rak_hash_alg().unwrap();
+         let platform_nonce = self.platform_claims.get_challenge().unwrap();
+ 
+diff --git a/src/token/platform.rs b/src/token/platform.rs
+index 640ece7..1387e69 100644
+--- a/src/token/platform.rs
++++ b/src/token/platform.rs
+@@ -103,6 +103,7 @@ impl SwComponent {
+         }
+ 
+         let x = to_tstr(v, "measurement-type")?;
++        let x = x.trim_end_matches('\0').to_string();
+ 
+         self.mtyp = Some(x);
+ 
+@@ -168,6 +169,7 @@ impl SwComponent {
+ 
+ const PLATFORM_PROFILE_LEGACY: &str = "http://arm.com/CCA-SSD/1.0.0";
+ const PLATFORM_PROFILE: &str = "tag:arm.com,2023:cca_platform#1.0.0";
++const PLATFORM_PROFILE_HUAWEI: &str = "tag:huawei_kunpeng:cca_platform#1.0.0#v1";
+ 
+ const PLATFORM_PROFILE_LABEL: i128 = 265;
+ const PLATFORM_CHALLENGE_LABEL: i128 = 10;
+@@ -308,7 +310,7 @@ impl Platform {
+         // the platform claims-set arrangement.
+         // However, if p == PLATFORM_PROFILE, then the realm token shall also
+         // have a profile claim.
+-        if p != PLATFORM_PROFILE && p != PLATFORM_PROFILE_LEGACY {
++        if p != PLATFORM_PROFILE && p != PLATFORM_PROFILE_LEGACY && p != PLATFORM_PROFILE_HUAWEI {
+             return Err(Error::UnknownProfile(p.to_string()));
+         }
+ 
+diff --git a/src/token/realm.rs b/src/token/realm.rs
+index 7014a33..8656b8c 100644
+--- a/src/token/realm.rs
++++ b/src/token/realm.rs
+@@ -9,6 +9,7 @@ use ciborium::de::from_reader;
+ use ciborium::Value;
+ 
+ pub const REALM_PROFILE: &str = "tag:arm.com,2023:realm#1.0.0";
++pub const REALM_PROFILE_HUAWEI: &str = "tag:huawei_kunpeng:cca_realm#1.0.0#v1";
+ 
+ const REALM_CHALLENGE_LABEL: i128 = 10;
+ const REALM_PROFILE_LABEL: i128 = 265;
+@@ -43,7 +44,7 @@ pub struct Realm {
+     pub rim: Vec<u8>,         // 44238 => bytes .size {32,48,64}
+     pub rem: [Vec<u8>; 4],    // 44239 => [ 4*4 bytes .size {32,48,64} ]
+     pub hash_alg: String,     // 44236 => text
+-    pub raw_rak: [u8; 97],    // 44237 => bytes .size 97 (profile=="")
++    pub raw_rak: [u8; 133],   // 44237 => bytes .size 133 (P-521: 1 + 66 + 66)
+     pub cose_rak: Vec<u8>,    // 44237 => bytes .cbor COSE_Key (profile==REALM_PROFILE)
+     pub rak_hash_alg: String, // 44240 => text
+ 
+@@ -65,7 +66,7 @@ impl Realm {
+             rim: vec![0, 64],
+             rem: Default::default(),
+             hash_alg: String::from(""),
+-            raw_rak: [0; 97],
++            raw_rak: [0; 133],
+             cose_rak: Default::default(),
+             rak_hash_alg: String::from(""),
+             claims_set: ClaimsSet::none(),
+@@ -141,11 +142,11 @@ impl Realm {
+         }
+ 
+         // RAK format depends on the token profile
+-        if self.profile == REALM_PROFILE {
++        if self.profile == REALM_PROFILE || self.profile == REALM_PROFILE_HUAWEI {
+             if self.cose_rak.is_empty() {
+                 return Err(Error::Sema("RAK COSE_Key not set".to_string()));
+             }
+-        } else if self.raw_rak == [0; 97] {
++        } else if self.raw_rak == [0; 133] {
+             return Err(Error::Sema("RAK raw public key not set".to_string()));
+         }
+ 
+@@ -161,7 +162,7 @@ impl Realm {
+ 
+         let p = to_tstr(v, "profile")?;
+ 
+-        if p != REALM_PROFILE {
++        if p != REALM_PROFILE && p != REALM_PROFILE_HUAWEI {
+             return Err(Error::UnknownProfile(p.to_string()));
+         }
+ 
+@@ -259,6 +260,11 @@ impl Realm {
+                 )));
+             }
+             self.raw_rak[..].clone_from_slice(&x);
++        } else if self.profile == REALM_PROFILE_HUAWEI {
++            self.cose_rak = x.clone();
++            if let Err(e) = Self::extract_raw_rak_from_cose(&x, &mut self.raw_rak) {
++                eprintln!("WARN: failed to extract raw RAK from COSE_Key: {:?}", e);
++            }
+         } else {
+             self.cose_rak = x
+         }
+@@ -268,6 +274,40 @@ impl Realm {
+         Ok(())
+     }
+ 
++    fn extract_raw_rak_from_cose(cose_key: &[u8], raw_rak: &mut [u8; 133]) -> Result<(), Error> {
++        let v: Value = from_reader(cose_key).map_err(|e| Error::Syntax(e.to_string()))?;
++        let map = match v {
++            Value::Map(m) => m,
++            _ => return Err(Error::TypeMismatch("expecting COSE_Key map".to_string())),
++        };
++
++        let mut x_bytes: Option<Vec<u8>> = None;
++        let mut y_bytes: Option<Vec<u8>> = None;
++
++        for (k, v) in map {
++            if let Value::Integer(i) = k {
++                match i.into() {
++                    -2 => { x_bytes = v.as_bytes().map(|b| b.to_vec()); }
++                    -3 => { y_bytes = v.as_bytes().map(|b| b.to_vec()); }
++                    _ => {}
++                }
++            }
++        }
++
++        let x = x_bytes.ok_or_else(|| Error::MissingClaim("x coordinate".to_string()))?;
++        let y = y_bytes.ok_or_else(|| Error::MissingClaim("y coordinate".to_string()))?;
++
++        if x.len() != 66 || y.len() != 66 {
++            return Err(Error::Sema(format!("invalid EC coordinate lengths: x={}, y={}", x.len(), y.len())));
++        }
++
++        raw_rak[0] = 0x04;
++        raw_rak[1..67].copy_from_slice(&x);
++        raw_rak[67..133].copy_from_slice(&y);
++
++        Ok(())
++    }
++
+     fn set_rem(&mut self, v: &Value) -> Result<(), Error> {
+         if self.claims_set.contains(Claims::Rem) {
+             return Err(Error::DuplicatedClaim(
+@@ -330,7 +370,7 @@ impl Realm {
+     }
+ 
+     pub fn get_realm_key(&self) -> Result<Vec<u8>, Error> {
+-        let rak = if self.profile == REALM_PROFILE {
++        let rak = if self.profile == REALM_PROFILE || self.profile == REALM_PROFILE_HUAWEI {
+             self.cose_rak.clone()
+         } else {
+             self.raw_rak.clone().to_vec()
+@@ -343,6 +383,14 @@ impl Realm {
+         Ok(rak)
+     }
+ 
++    pub fn get_raw_realm_key(&self) -> Result<Vec<u8>, Error> {
++        let rak = self.raw_rak.clone().to_vec();
++        if rak == [0u8; 133].to_vec() {
++            return Err(Error::MissingClaim("No raw realm Key".to_string()));
++        }
++        Ok(rak)
++    }
++
+     pub fn get_rak_hash_alg(&self) -> Result<String, Error> {
+         let rak_hash_alg = self.rak_hash_alg.clone();
+ 
+-- 
+2.46.0
+
+
