@@ -1,4 +1,6 @@
-> 此文档提供远程证明组件kbs、as简易编译部署指导，帮助用户快速基于鲲鹏CCA平台完成coco机密容器远程证明特性验证，更多配置和部署形态可参考上游社区:https://github.com/confidential-containers/trustee
+# 部署远程证明组件
+
+> 此文档提供远程证明组件kbs、as简易编译部署指导，帮助用户快速基于鲲鹏CCA平台完成coco机密容器远程证明特性验证，更多配置和部署形态可参考上游社区：<https://github.com/confidential-containers/trustee>
 
 ## 1. 构建容器编译环境
 ```shell

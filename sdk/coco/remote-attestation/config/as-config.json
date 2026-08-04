@@ -1,0 +1,8 @@
+{
+    "work_dir": "/opt/confidential-containers/attestation-service",
+    "policy_engine": "opa",
+    "attestation_token_broker": {
+        "type": "Simple",
+        "duration_min": 5
+    }
+}
