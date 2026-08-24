@@ -1,12 +1,12 @@
-# ARM CCA (Confidential Computing Architecture)
+# ARM CCA (Confidential Compute Architecture)
 
 ## 概述
 
-ARM CCA (Confidential Computing Architecture) 是ARM公司为其 Armv9-A 架构推出的一套硬件和软件架构创新，旨在为所有数据和使用中的代码提供机密性和完整性保护。该架构通过硬件、固件及软件支持，为虚拟机提供了强隔离的执行环境（机密虚机），确保即使系统管理员也无法访问机密虚机内的敏感数据。
+ARM CCA (Confidential Compute Architecture) 是ARM公司为其 Armv9-A 架构推出的一套硬件和软件架构创新，旨在为所有数据和使用中的代码提供机密性和完整性保护。该架构通过硬件、固件及软件支持，为虚拟机提供了强隔离的执行环境（机密虚机），确保即使系统管理员也无法访问机密虚机内的敏感数据。
 
 ## CCA总体架构
 
-Realm和Root是CCA架构引入的两个新的世界，加上原有的Normal和Trustzone共有四个世界，总体架构如下图所示。
+Realm和Root是CCA架构引入的两个新的世界，加上原有的Normal和Trustzone共有四个世界，总体架构如下所示。
 
 - **Root**：具有最高特权级别，运行在EL3异常级别，负责安全启动和不同环境之间的切换。
 - **Realm**：提供受保护的执行环境，用于运行安全虚拟化层RMM（Realm Management Monitor）和敏感的虚拟机（机密虚机）。
@@ -34,7 +34,7 @@ Realm和Root是CCA架构引入的两个新的世界，加上原有的Normal和Tr
 
 ## openEuler CCA实现
 
-openEuler在CCA硬件及固件之上，构建原生支持CCA机密虚机的操作系统，分别在libvirt、qemu、kernel（KVM和Guest kernel）软件包上开发支持CCA，当前版本仅支持CCA机密虚机的创建、销毁和启动机密虚机后获取机密虚机的证明报告，总体框架如下。
+openEuler运行在CCA硬件及固件之上，原生支持CCA机密虚机，即分别在libvirt、qemu、kernel（KVM和Guest kernel）软件包上新增支持CCA，当前版本仅支持CCA机密虚机的创建、销毁和启动机密虚机后获取机密虚机的证明报告，总体框架如下。
 
 ```mardkown
 +------------+------------+
