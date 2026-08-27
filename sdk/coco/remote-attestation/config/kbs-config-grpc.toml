@@ -1,0 +1,23 @@
+[http_server]
+sockets = ["0.0.0.0:8080"]
+insecure_http = true
+worker_count = 4
+
+[attestation_token]
+insecure_key = true
+
+[admin]
+type = "InsecureAllowAll"
+
+[attestation_service]
+type = "coco_as_grpc"
+as_addr = "http://as:50004"
+pool_size = 200
+
+[policy_engine]
+policy_path = "/opt/confidential-containers/kbs/policy.rego"
+
+[[plugins]]
+name = "resource"
+type = "LocalFs"
+dir_path = "/opt/confidential-containers/kbs/repository"

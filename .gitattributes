@@ -1,0 +1,5 @@
+.gitattributes text eol=lf
+sdk/coco/config/Dockerfile text eol=lf
+sdk/coco/tools/build-rats-image.sh text eol=lf
+sdk/coco/remote-attestation/** text eol=lf
+sdk/coco/docs/** text eol=lf

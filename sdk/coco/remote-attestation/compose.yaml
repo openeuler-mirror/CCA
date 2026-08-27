@@ -1,0 +1,56 @@
+services:
+  as:
+    image: ${RATS_IMAGE:-cca-rats:v0.18.0-cca}
+    command:
+      - as
+      - -s
+      - 0.0.0.0:50004
+      - -c
+      - /etc/cca-rats/as-config.json
+    restart: unless-stopped
+    environment:
+      RUST_LOG: ${RUST_LOG:-INFO}
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    volumes:
+      - ./config/as-config.json:/etc/cca-rats/as-config.json:ro
+      - ./config/default.rego:/opt/confidential-containers/attestation-service/token/simple/policies/opa/default.rego:ro
+      - ./config/config.json:/opt/confidential-containers/attestation-service/cca/config.json:ro
+      - ./config/tastore.json:/opt/confidential-containers/attestation-service/cca/tastore.json:ro
+      - ./config/rvstore.json:/opt/confidential-containers/attestation-service/cca/rvstore.json:ro
+      - ./data/as:/opt/confidential-containers/attestation-service
+    expose:
+      - "50004"
+    networks:
+      - rats
+
+  kbs:
+    image: ${RATS_IMAGE:-cca-rats:v0.18.0-cca}
+    command:
+      - kbs
+      - -c
+      - /etc/cca-rats/kbs-config-grpc.toml
+    restart: unless-stopped
+    environment:
+      RUST_LOG: ${RUST_LOG:-INFO}
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    depends_on:
+      - as
+    volumes:
+      - ./config/kbs-config-grpc.toml:/etc/cca-rats/kbs-config-grpc.toml:ro
+      - ./data/kbs:/opt/confidential-containers/kbs
+    ports:
+      - "${KBS_PORT:-8080}:8080"
+    networks:
+      - rats
+
+networks:
+  rats:
+    driver: bridge
