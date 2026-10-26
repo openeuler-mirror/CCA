@@ -1,0 +1,8 @@
+label: CoCo机密容器远程证明部署指南
+isManual: true
+description: 提供CoCo机密容器远程证明组件KBS、AS的编译部署指导，帮助用户基于鲲鹏CCA平台完成远程证明特性验证
+sections:
+    - label: 部署远程证明组件
+      href: ./deploy_remote_attestation.md
+    - label: 容器化部署远程证明组件
+      href: ./containerized_deploy_remote_attestation.md
