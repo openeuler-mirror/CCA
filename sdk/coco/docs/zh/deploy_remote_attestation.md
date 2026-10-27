@@ -1,8 +1,9 @@
 # 部署远程证明组件
 
-> 此文档提供远程证明组件kbs、as简易编译部署指导，帮助用户快速基于鲲鹏CCA平台完成coco机密容器远程证明特性验证，更多配置和部署形态可参考上游社区：<https://github.com/confidential-containers/trustee>
+> 此文档提供远程证明组件KBS、AS简易编译部署指导，帮助用户快速基于鲲鹏CCA平台完成coco机密容器远程证明特性验证，更多配置和部署形态可参考上游社区：[trustee](https://github.com/confidential-containers/trustee)
 
 ## 1. 构建容器编译环境
+
 ```shell
 mkdir /home/coco && cd /home/coco
 git clone https://gitcode.com/openeuler/CCA.git
@@ -15,15 +16,16 @@ cp GatewayCA.crt certs
 # 构建镜像时指定代理
 docker build --no-cache --build-arg http_proxy=http://IP:PORT --build-arg https_proxy=http://IP:PORT -t coco-builder:1.90.0 .
 
-# 基于构建的镜像创建编译环境容, /home/coco为源码路径，用户可自定义修改
+# 基于构建的镜像创建编译环境容器，/home/coco为源码路径，用户可自定义修改
 docker run -itd --name coco-build-env -v /home/coco:/coco -e http_proxy="http://IP:PORT" -e https_proxy="http://IP:PORT" coco-builder:1.90.0
 ```
 
 ## 2. 准备远程证明源码
+
 ```shell
 mkdir /home/coco && cd /home/coco
 
-# 准备ccatoken源码，apply Kunpeng平台适配patch 
+# 准备ccatoken源码，apply Kunpeng平台适配patch
 git clone https://github.com/veraison/rust-ccatoken.git
 cd rust-ccatoken
 git reset --hard 6d5b8db
@@ -36,6 +38,7 @@ sed -i 's#ccatoken = { git = "https://github.com/veraison/rust-ccatoken", rev = 
 ```
 
 ## 3. 编译kbs和grpc-as
+
 ```shell
 # 进到编译环境容器
 docker exec -it coco-build-env /bin/bash
@@ -48,13 +51,17 @@ make VERIFIER=cca-verifier
 cd /coco/trustee/kbs
 make background-check-kbs COCO_AS_INTEGRATION_TYPE=grpc
 ```
+
 编译产物二进制路径：`/home/coco/trustee/target/release`，**拷贝至远程证明运行节点的/usr/local/bin路径下**。
 
 ## 4. 部署kbs
+
 mkdir /etc/coco && vim /etc/coco/kbs-config-grpc.toml
 
 参考配置如下：
-```shell
+说明：`insecure_key = true`配置仅用于功能打通，生产环境中可通过 attestation_token 配置注入真实私钥/证书，或由 KBS 生成并持久化密钥。`InsecureAllowAll/insecure_http` 仅用于功能验证，生产必须改为带认证的 admin 类型并启用 TLS。
+
+```toml
 [http_server]
 sockets = ["0.0.0.0:8080"]
 insecure_http = true
@@ -78,8 +85,10 @@ dir_path = "/opt/confidential-containers/kbs/repository"
 
 mkdir -p /opt/confidential-containers/kbs/repository/default/security-policy && vim /opt/confidential-containers/kbs/repository/default/security-policy/test
 
-参考配置如下:
-```shell
+参考配置如下：
+说明：`insecureAcceptAnything` 策略仅用于功能验证，生产环境中必须替换为 signedBy/reject 等真实策略并配置签名者。`registry.hw.com:5000` 为容器镜像仓库地址，根据实际情况修改。
+
+```json
 {
     "default": [
         {
@@ -101,6 +110,7 @@ mkdir -p /opt/confidential-containers/kbs/repository/default/security-policy && 
 启动kbs常驻进程：`RUST_LOG=DEBUG kbs -c /etc/coco/kbs-config-grpc.toml`
 
 ## 5. 部署as
+
 ```shell
 # 拷贝参考设备证书、基线文件
 mkdir -p /opt/confidential-containers/attestation-service/cca
@@ -109,15 +119,16 @@ cp /home/coco/CCA/sdk/coco/config/* /opt/confidential-containers/attestation-ser
 
 vim /etc/coco/as-config.json
 参考配置如下：
-```shell
+
+```json
 {
     "work_dir": "/opt/confidential-containers/attestation-service",
     "policy_engine": "opa",
     "attestation_token_broker": {
-    "type": "Simple",
+        "type": "Simple",
         "duration_min": 5
     }
 }
-``` 
+```
 
-启动as常驻进程：`RUST_LOG=DEBUG grpc-as -s 127.0.0.1:50004 -c /etc/coco/as-config.json`
+启动as常驻进程：`RUST_LOG=DEBUG grpc-as -s 127.0.0.1:50004 -c /etc/coco/as-config.json`。

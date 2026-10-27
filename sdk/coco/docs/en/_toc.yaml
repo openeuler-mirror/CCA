@@ -1,0 +1,8 @@
+label: CoCo Confidential Containers Remote Attestation Deployment Guide
+isManual: true
+description: Provides compilation and deployment guidance for the CoCo remote attestation components KBS and AS, helping users complete remote attestation feature verification on the Kunpeng CCA platform.
+sections:
+    - label: Remote Attestation Component Deployment
+      href: ./deploy_remote_attestation.md
+    - label: Containerized Deployment of Remote Attestation Components
+      href: ./containerized_deploy_remote_attestation.md
